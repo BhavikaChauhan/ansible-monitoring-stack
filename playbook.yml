@@ -1,0 +1,37 @@
+- name: Deploy Monitoring Stack with Auto Grafana Provisioning
+  hosts: monitoring
+  become: yes
+
+  tasks:
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install Docker and Compose
+      apt:
+        name:
+          - docker.io
+          - docker-compose-plugin
+        state: present
+
+    - name: Enable and start Docker
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Create monitoring directory
+      file:
+        path: /opt/monitoring
+        state: directory
+
+    - name: Copy monitoring project files
+      copy:
+        src: files/
+        dest: /opt/monitoring/
+
+    - name: Start monitoring stack
+      command: docker compose up -d
+      args:
+        chdir: /opt/monitoring
