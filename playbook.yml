@@ -8,10 +8,47 @@
       apt:
         update_cache: yes
 
-    - name: Install Docker and Compose
+    - name: Install prerequisites for Docker repository
       apt:
         name:
-          - docker.io
+          - ca-certificates
+          - curl
+          - gnupg
+        state: present
+
+    - name: Create Docker keyrings directory
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Add Docker GPG key
+      shell: |
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+        gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+      args:
+        creates: /etc/apt/keyrings/docker.gpg
+
+    - name: Add Docker repository (Ubuntu 24.04 Noble)
+      shell: |
+        echo \
+        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+        https://download.docker.com/linux/ubuntu noble stable" | \
+        tee /etc/apt/sources.list.d/docker.list > /dev/null
+      args:
+        creates: /etc/apt/sources.list.d/docker.list
+
+    - name: Update apt cache after adding Docker repo
+      apt:
+        update_cache: yes
+
+    - name: Install Docker Engine and Compose plugin
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
           - docker-compose-plugin
         state: present
 
@@ -21,17 +58,25 @@
         enabled: yes
         state: started
 
+    - name: Add azureuser to docker group
+      user:
+        name: azureuser
+        groups: docker
+        append: yes
+
     - name: Create monitoring directory
       file:
         path: /opt/monitoring
         state: directory
+        mode: '0755'
 
     - name: Copy monitoring project files
       copy:
         src: files/
         dest: /opt/monitoring/
+        mode: '0755'
 
     - name: Start monitoring stack
       command: docker compose up -d
       args:
-        chdir: /opt/monitoring
+        chdir: /opt/monitoring/
