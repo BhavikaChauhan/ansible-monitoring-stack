@@ -102,7 +102,7 @@ Ensure `inventory.ini` contains:
 
 ```
 [monitoring]
-azurevm ansible_host=<PUBLIC_IP> ansible_user=azureuser ansible_ssh_private_key_file=mujahed.pem
+azurevm ansible_host=<PUBLIC_IP> ansible_user=azureuser ansible_ssh_private_key_file=key.pem
 ```
 
 ---
